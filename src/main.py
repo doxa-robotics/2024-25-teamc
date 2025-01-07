@@ -1,56 +1,103 @@
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-# 	Module:       main.py                                                      #
-# 	Author:       Programer                                                    #
-# 	Created:      8/29/2024, 3:48:41 PM                                        #
-# 	Description:  V5 project                                                   #
+#   Module:       main.py                                                      #
+#   Author:       REBECCA HALE                                                 #
+#   Created:      11/21/2023, 5:01:50 PM                                       #
+#   Description:  V5 project                                                   #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
+
 # Library imports
-import math
+
 from vex import *
+import math
+COMPETITION_MODE = True
 
 # Brain should be defined by default
-brain = Brain()
 
+brain = Brain()
+DriveTrain = DriveTrain
 controller = Controller()
 
+#Drivetrain
+motor1 = Motor(Ports.PORT19)
+motor2 = Motor(Ports.PORT13)
+
+#Group ( Drivetrain )
+motor3 = MotorGroup(motor1, motor2)
+drivetrain = DriveTrain(motor1, motor2, 259)
+
+#Thinggy
+lever = Motor(Ports.PORT10)
+roller = Motor(Ports.PORT12)
+pneumatics1 = Pneumatics(brain.three_wire_port.a)
+
+#Group (Lever and roller)
+motor4 = MotorGroup(lever, roller)
+
+# We don't use this right now
+pinchers = Motor(Ports.PORT1)
+
+# For Drivers
+
+def driver_control():
+    while True:
+        motor2.spin(
+            DirectionType.REVERSE,
+            controller.axis3.position() + controller.axis1.position(),
+            VelocityUnits.PERCENT)
+        motor1.spin(
+            DirectionType.REVERSE,
+            controller.axis3.position() - controller.axis1.position(),
+            VelocityUnits.PERCENT)
+        
+        #Drivetrain
+        #Remember: if,elif,else
+        
+        if controller.buttonR1.pressing():
+            motor3.spin(FORWARD, 100, RPM)
+    
+        
+        elif controller.buttonR2.pressing():
+            motor3.spin(REVERSE, 100, RPM)
+
+        else:
+            motor3.stop()
+       
+
+       ##CHANGE L1 and button A!!! 
+        if controller.buttonL1.pressing():
+            motor3.spin(FORWARD, 20)  
+        elif controller.buttonL2.pressing():
+            motor3.spin(REVERSE, 20)
+        else:
+            motor3.stop()
+
+        #Others
+        if controller.buttonA.pressing():
+            motor4.spin(FORWARD, 100, RPM)
+        else:
+            motor4.stop()
+
+        if controller.buttonB.pressing():
+            pneumatics1.open()
+        else:
+            pneumatics1.close
+
+# AUTO
+
+def move(distence: DirectionType.DirectionType, distance: int):
+    drivetrain.drive_for(distence, distance, MM, velocity=50)
 
 
-DriveTrain = DriveTrain
+def Auto():
+    while True:
+       
+        drivetrain.turn(RIGHT, 45)
+        motor3.spin_for(FORWARD, 13, TURNS)        
+        lever.spin(FORWARD, 80, RPM)
 
+if COMPETITION_MODE:
+    Competition(driver_control, Auto)
 
-brain.screen.print("Hello V5")
-
-motor1 = Motor(Ports.PORT1)
-motor2 = Motor(Ports.PORT2)
-mg1 = MotorGroup(motor1, motor2)
-
-
-DEBUG = False
-#     d1: Defense, push into goal
-#     d2: None
-#     o1:  match load offense, touch bar
-#     o2: don't touch bar
-# skills: 60s *auton* skills
-#   none: no-op, so do nothing during auton period
-AUTON_ROUTINE = "o2"
-
-
-# Distance between wheel centers, mm
-TRACK_WIDTH = 305
-# Distance robot moves in one motor turn, mm
-TRACK_DISTANCE = 460
-
-
-def convert_damped_controller(val):
-    value = math.pow(0.1*val, 2)
-    if val < 0:
-        return -value
-    else:
-        return value
-
-    # Pistons (DONE)
-wing_piston = Pneumatics(brain.three_wire_port.a)
-balance_piston = Pneumatics(brain.three_wire_port.h)
